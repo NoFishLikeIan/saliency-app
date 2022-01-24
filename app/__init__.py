@@ -27,13 +27,6 @@ def hello_joke():
 @app.route('/')
 def upload_file():
 
-    conn = db.get_db()
-    curs = conn.cursor()
-
-    curs.execute("INSERT INTO saliency VALUES (?, ?, ?, ?)", ["test", "test", "test", 2.12]) # FIXME: db not saved
-
-    conn.close()
-
     return render_template('upload.html')
 
 @app.route('/uploader', methods = ['GET', 'POST'])

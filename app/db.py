@@ -49,6 +49,7 @@ def add_to_saliency(report, company, saliencies):
         rows
     )
 
+    db.commit()
     close_db()
 
 def saliency_to_sql(report, company, saliencies):
