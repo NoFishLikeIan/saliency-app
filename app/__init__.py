@@ -1,7 +1,8 @@
 import os
-import json
+import csv
+import pandas as pd
 
-from flask import Flask, render_template, request
+from flask import Flask, Response, render_template, request
 from werkzeug.utils import secure_filename
 
 from . import db, read_pdf, saliency_metric, topic
@@ -25,6 +26,14 @@ def hello_joke():
 
 @app.route('/')
 def upload_file():
+
+    conn = db.get_db()
+    curs = conn.cursor()
+
+    curs.execute("INSERT INTO saliency VALUES (?, ?, ?, ?)", ["test", "test", "test", 2.12]) # FIXME: db not saved
+
+    conn.close()
+
     return render_template('upload.html')
 
 @app.route('/uploader', methods = ['GET', 'POST'])
@@ -38,16 +47,43 @@ def parse_file():
         lda, corpus, words = topic.get_topics(sentences)
         saliencies = saliency_metric.saliency_index(lda, corpus, words) 
 
-        with open('.tmp/test.json', 'w') as outfile:
-            json.dump(saliencies, outfile)
+        filedata = f.filename.replace(".pdf", "").split("-")
 
+        if len(filedata) != 2:
+            return "Upload not successful: format of file should be REPORT-COMPANY.pdf"
+
+        report, company = [s.lower() for s in filedata]
+
+        db.add_to_saliency(report, company, saliencies)
 
         os.remove(filepath)
 
         return "Done!"
 
 
-    return "Have a good day!"
+    return "Done nothing, have a good day!"
+
+@app.route('/download', methods = ['GET', 'POST'])
+def download():
+    tmppath = os.path.join(".tmp", "data.csv")
+
+    conn = db.get_db()
+
+    data = pd.read_sql_query("SELECT * FROM saliency", conn)
+
+    data.to_csv(tmppath, index = False)
+
+    with open(tmppath, 'r') as fp:
+        csvraw = fp.read()
+
+    conn.close()
+    os.remove(tmppath)
+
+    return Response(
+        csvraw,
+        mimetype="text/csv",
+        headers = { "Content-disposition": "attachment; filename = saliency.csv" }
+    )
 
 db.init_app(app)
     

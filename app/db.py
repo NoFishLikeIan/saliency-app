@@ -15,7 +15,7 @@ def get_db():
     return g.db
 
 
-def close_db(e=None):
+def close_db(e = None):
     db = g.pop('db', None)
 
     if db is not None:
@@ -37,3 +37,40 @@ def init_db_command():
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command) 
+
+def add_to_saliency(report, company, saliencies):
+    db = get_db()
+    cur = db.cursor()
+
+    rows = saliency_to_sql(report, company, saliencies)
+
+    cur.executemany(
+        "INSERT INTO saliency VALUES (?, ?, ?, ?)",
+        rows
+    )
+
+    close_db()
+
+def saliency_to_sql(report, company, saliencies):
+    """
+    Maps to schema
+    (
+        report TEXT NOT NULL,
+        company TEXT NOT NULL,
+        word TEXT NOT NULL,
+        score REAL NOT NULL
+    );
+    """
+
+    rows = [
+        (report, company, word, score) for
+        word, score in saliencies.items()
+    ]    
+
+    return rows
+
+
+
+
+    
+
