@@ -1,9 +1,12 @@
 import os
-import csv
 import pandas as pd
 
 from flask import Flask, Response, render_template, request
+from flask_basicauth import BasicAuth
 from werkzeug.utils import secure_filename
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from . import db, read_pdf, saliency_metric, topic
 
@@ -11,7 +14,11 @@ app = Flask(__name__, instance_relative_config=True)
 app.config.from_mapping(
     SECRET_KEY='dev',
     DATABASE=os.path.join(app.instance_path, 'saliency.sqlite'),
+    BASIC_AUTH_USERNAME=os.environ.get("BASIC_AUTH_USERNAME"),
+    BASIC_AUTH_PASSWORD=os.environ.get("BASIC_AUTH_PASSWORD")
 )
+
+basic_auth = BasicAuth(app)
 
 # ensure the instance folder exists
 try:
@@ -25,6 +32,7 @@ def hello_joke():
 
 
 @app.route('/')
+@basic_auth.required
 def upload_file():
 
     return render_template('upload.html')
@@ -56,7 +64,8 @@ def parse_file():
 
     return "Done nothing, have a good day!"
 
-@app.route('/download', methods = ['GET', 'POST'])
+@app.route('/download')
+@basic_auth.required
 def download():
     tmppath = os.path.join(".tmp", "data.csv")
 
