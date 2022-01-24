@@ -9,9 +9,7 @@ from itertools import chain
 from gensim.models.ldamodel import LdaModel
 from gensim.corpora.dictionary import Dictionary
 
-from parse_reports import read_sentences
-from nlp import topic
-
+from . import topic
 
 def saliency_index(lda: LdaModel, corpus, words: Dictionary):
 
