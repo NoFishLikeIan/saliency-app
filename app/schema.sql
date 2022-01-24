@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS saliency;
+
+CREATE TABLE saliency (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    report TEXT NOT NULL,
+    company TEXT NOT NULL,
+    word TEXT NOT NULL,
+    score REAL NOT NULL
+);
