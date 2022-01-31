@@ -1,12 +1,24 @@
-import PyPDF2
-import nltk
-import os
+import re, io, requests, os
 
-import re, io, os, requests
+# NLP
+import nltk
+
 from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer,PorterStemmer
 from nltk.corpus import stopwords
 
+# PDF
+import PyPDF2 # To decrypt file
+
+from pdfminer.converter import TextConverter
+from pdfminer.layout import LAParams
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.pdfpage import PDFPage
+from pdfminer.pdfparser import PDFParser
+
+
+# Typings
 from typing import List
 
 lemmatizer = WordNetLemmatizer()
@@ -46,26 +58,31 @@ def extract_statements(text):
     return [nltk.word_tokenize(preprocess(sent)) for sent in nltk.sent_tokenize(text)]
 
 
-def pdf_to_text(pdf):
-    text = ""
-    n_pages = pdf.getNumPages()
+def pdf_to_text(pdf_file):
+    output = io.StringIO()
 
-    for i in range(n_pages):
-        page = pdf.getPage(i)
+    parser = PDFParser(pdf_file)
+    manager = PDFResourceManager()
+    device = TextConverter(
+        manager, output, laparams=LAParams()
+    )
 
-        page_text = page.extractText()
+    interpreter = PDFPageInterpreter(manager, device)
+    document = PDFDocument(parser)
 
-        text += f"{page_text}\n"
+    for page in PDFPage.create_pages(document):
+        interpreter.process_page(page)
 
-    return text
+    return output.getvalue()
 
 
 def pdfreader_decrypt(filename):
     """
     https://stackoverflow.com/a/48364988
     """    
-    with open(filename, "rb") as fp:
-        pdfFile  = PyPDF2.PdfFileReader(fp, strict=False)
+
+    with open(filename, "rb") as in_file:
+        pdfFile  = PyPDF2.PdfFileReader(in_file, strict=False)
 
         if pdfFile.isEncrypted:
             try:
@@ -83,7 +100,7 @@ def pdfreader_decrypt(filename):
                     pdfFile = PyPDF2.PdfFileReader(fp, strict=False)
                     return pdf_to_text(pdfFile)
 
-        return pdf_to_text(pdfFile)
+        return pdf_to_text(in_file)
 
 
 def path_to_sentences(filepath: str) -> List[str]:
