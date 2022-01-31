@@ -105,5 +105,7 @@ def clear_db():
         return f"DB instance not found at {instance}"
 
 if __name__ == "__main__":
-    db.init_db()
+    with app.app_context():
+        db.init_db()
+        
     app.run()
