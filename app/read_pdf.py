@@ -9,8 +9,6 @@ from nltk.corpus import stopwords
 
 from typing import List
 
-nltk.download(["punkt", "wordnet", "stopwords", "omw-1.4"])
-
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer() 
 
