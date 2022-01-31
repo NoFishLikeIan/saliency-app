@@ -1,12 +1,17 @@
 <html>
    <body>
-      <form 
-         action = "https://saliency-app.herokuapp.com/uploader"
-         method = "POST" 
-         enctype = "multipart/form-data"
+      <div
+         style="margin: 50px"
       >
-         <input type = "file" name = "file" accept = "application/pdf" />
-         <input type = "submit"/>
-      </form>   
+         <p>Upload a report below. Make sure the file name is named "$TYPE-$INVESTOR.pdf" (e.g. annual-blackrock.pdf)</p>
+         <form 
+            action = "https://saliency-app.herokuapp.com/uploader"
+            method = "POST" 
+            enctype = "multipart/form-data"
+         >
+            <input type = "file" name = "file" accept = "application/pdf" />
+            <input type = "submit"/>
+         </form>   
+      </div>
    </body>
 </html>
