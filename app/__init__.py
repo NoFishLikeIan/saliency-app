@@ -20,8 +20,9 @@ app.config.from_mapping(
 
 basic_auth = BasicAuth(app)
 
-# ensure the instance folder exists
+# ensure the instance and tmp folder exists
 os.makedirs(app.instance_path, exist_ok=True)
+os.makedirs(".tmp", exist_ok=True)
 
 @app.route('/joke')
 def hello_joke():
