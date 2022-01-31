@@ -21,15 +21,15 @@ app.config.from_mapping(
 basic_auth = BasicAuth(app)
 
 # ensure the instance folder exists
-try:
-    os.makedirs(app.instance_path)
-except OSError:
-    pass
+os.makedirs(app.instance_path, exist_ok=True)
 
 @app.route('/joke')
 def hello_joke():
     return "I only know 25 letters of the alphabet. I don't know y."
 
+@app.before_first_request
+def initialize_database():
+    db.init_db()
 
 @app.route('/')
 @basic_auth.required
@@ -38,6 +38,7 @@ def upload_file():
     return render_template('upload.html')
 
 @app.route('/uploader', methods = ['GET', 'POST'])
+@basic_auth.required
 def parse_file():
     if request.method == 'POST':
         f = request.files['file']
@@ -70,8 +71,8 @@ def download():
     tmppath = os.path.join(".tmp", "data.csv")
 
     conn = db.get_db()
-
     data = pd.read_sql_query("SELECT * FROM saliency", conn)
+    db.close_connection()
 
     data.to_csv(tmppath, index = False)
 
@@ -87,7 +88,20 @@ def download():
         headers = { "Content-disposition": "attachment; filename = saliency.csv" }
     )
 
+
+@app.route('/clear')
+@basic_auth.required
+def clear_db():
+    instance = app.config.get("DATABASE")
+    
+    if os.path.isfile(instance):
+        db.init_db()
+        return "Cleared db"
+    else:
+        return f"DB instance not found at {instance}"
+    
+
+
 if __name__ == "__main__":
-    db.init_app(app)
     app.run()
     

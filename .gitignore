@@ -155,3 +155,5 @@ cython_debug/
 env
 .tmp
 .vscode
+
+test-files
