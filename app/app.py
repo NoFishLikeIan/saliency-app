@@ -1,4 +1,5 @@
 import os
+import requests
 
 from flask import Flask, Response, render_template, request
 from flask_basicauth import BasicAuth
@@ -23,7 +24,13 @@ os.makedirs(".tmp", exist_ok=True)
 
 @app.route('/joke')
 def hello_joke():
-    return "I only know 25 letters of the alphabet. I don't know y."
+
+    r = requests.get(
+        'https://icanhazdadjoke.com/',
+        headers={'Accept': 'text/plain'}
+    )
+
+    return r.text
 
 @app.before_first_request
 def initialize_database():
