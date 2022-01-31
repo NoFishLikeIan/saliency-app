@@ -1,4 +1,6 @@
 import sqlite3
+import os
+import pandas as pd
 
 from flask import current_app, g
 
@@ -64,8 +66,16 @@ def saliency_to_sql(report, company, saliencies):
 
     return rows
 
+def data_as_csv(
+    query='SELECT rowid, * FROM saliency'
+):
+    conn = get_db()
+    data = pd.read_sql_query(query, conn)
+    close_connection()
 
+    csv = data.to_csv(index = False)
 
+    return csv
 
     
 

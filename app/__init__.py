@@ -69,19 +69,8 @@ def parse_file():
 @app.route('/download')
 @basic_auth.required
 def download():
-    tmppath = os.path.join(".tmp", "data.csv")
-
-    conn = db.get_db()
-    data = pd.read_sql_query("SELECT * FROM saliency", conn)
-    db.close_connection()
-
-    data.to_csv(tmppath, index = False)
-
-    with open(tmppath, 'r') as fp:
-        csvraw = fp.read()
-
-    conn.close()
-    os.remove(tmppath)
+    
+    csvraw = db.data_as_csv()
 
     return Response(
         csvraw,
