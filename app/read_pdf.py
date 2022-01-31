@@ -2,7 +2,7 @@ import PyPDF2
 import nltk
 import os
 
-import re, io, os, requests, string
+import re, io, os, requests
 from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer,PorterStemmer
 from nltk.corpus import stopwords
@@ -17,7 +17,7 @@ stemmer = PorterStemmer()
 def preprocess(sentence):
     sentence=str(sentence)
     sentence = sentence.lower()
-    sentence=sentence.replace('{html}',"") 
+    sentence = sentence.replace('{html}',"") 
     cleantext = re.sub(re.compile('<.*?>'), '', sentence)
     rem_url=re.sub(r'http\S+', '',cleantext)
     rem_num = re.sub('[0-9]+', '', rem_url)
@@ -29,7 +29,7 @@ def preprocess(sentence):
 
     lemma_words=[lemmatizer.lemmatize(w) for w in stem_words]
 
-    return " ".join(filtered_words)
+    return " ".join(lemma_words)
 
 def is_url(to_validate):
 
