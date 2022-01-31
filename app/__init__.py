@@ -1,7 +1,9 @@
+from distutils.command.upload import upload
 import os
 import requests
 
-from flask import Flask, Response, render_template, request
+from flask import Flask, Response, flash, url_for
+from flask import render_template, request, redirect
 from flask_basicauth import BasicAuth
 
 from dotenv import load_dotenv
@@ -13,6 +15,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.config.from_mapping(
     DATABASE=os.path.join(app.instance_path, 'saliency.sqlite'),
     BASIC_AUTH_USERNAME=os.environ.get("BASIC_AUTH_USERNAME"),
+    SECRET_KEY=os.environ.get("KEY"),
     BASIC_AUTH_PASSWORD=os.environ.get("BASIC_AUTH_PASSWORD")
 )
 
@@ -37,18 +40,21 @@ def initialize_database():
     db.init_db()
 
 @app.route('/')
-@basic_auth.required
-def upload_file():
+def passby():
+    return redirect(url_for('upload'))
 
-    return render_template('upload.html')
-
-@app.route('/uploader', methods = ['GET', 'POST'])
+@app.route('/upload', methods = ['GET', 'POST'])
 @basic_auth.required
-def parse_file():
+def upload():
+
     if request.method == 'POST':
-        f = request.files['file']
 
-        filepath, success = utils.save_pdf(f)
+        if 'file' not in request.files:
+            flash('No file!')
+            return redirect(request.url)
+
+        file = request.files['file']
+        filepath, success = utils.save_pdf(file)
 
         if not success:
             return filepath
@@ -57,28 +63,39 @@ def parse_file():
         lda, corpus, words = topic.get_topics(sentences)
         saliencies = saliency_metric.saliency_index(lda, corpus, words) 
 
-        report, company = f.filename.lower().replace(".pdf", "").split("-")
+        report, company = file.filename.lower().replace(".pdf", "").split("-")
 
         db.add_to_saliency(report, company, saliencies)
 
         os.remove(filepath)
 
-        return "Done!"
+        flash("Done")
+        print("Uploaded!")
+        redirect(url_for('upload'))
 
+    return render_template('upload.html')
 
-    return "Done nothing, have a good day!"
 
 @app.route('/download')
 @basic_auth.required
 def download():
     
-    csvraw = db.data_as_csv()
+    csvraw = db.data_as_csv('SELECT rowid, * FROM saliency')
 
     return Response(
         csvraw,
         mimetype="text/csv",
         headers = { "Content-disposition": "attachment; filename = saliency.csv" }
     )
+
+@app.route('/preview')
+@basic_auth.required
+def preview():
+    df = db.query_db('SELECT DISTINCT report, company FROM saliency ORDER BY company')
+
+    records = df.to_records(index=False)
+
+    return f"Current uploads: {records}"
 
 
 @app.route('/clear')

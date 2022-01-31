@@ -5,13 +5,20 @@
       >
          <p>Upload a report below. Make sure the file name is named "$TYPE-$INVESTOR.pdf" (e.g. annual-blackrock.pdf)</p>
          <form 
-            action = "https://saliency-app.herokuapp.com/uploader"
             method = "POST" 
             enctype = "multipart/form-data"
          >
             <input type = "file" name = "file" accept = "application/pdf" />
-            <input type = "submit"/>
+            <input type = "submit" value = "Upload file"/>
          </form>   
+         <p>
+            <p>
+               Click <a href = "/download">here</a> to download the data
+            </p>
+            <p>
+               Click <a href = "/preview">here</a> to see the already uploaded reports
+            </p>
+         </p>
       </div>
    </body>
 </html>

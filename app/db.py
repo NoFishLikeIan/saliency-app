@@ -66,16 +66,19 @@ def saliency_to_sql(report, company, saliencies):
 
     return rows
 
-def data_as_csv(
-    query='SELECT rowid, * FROM saliency'
-):
+def query_db(query:str) -> pd.DataFrame:
     conn = get_db()
     data = pd.read_sql_query(query, conn)
     close_connection()
+
+    return data
+
+def data_as_csv(query):
+    data = query_db(query)
 
     csv = data.to_csv(index = False)
 
     return csv
 
-    
+
 
