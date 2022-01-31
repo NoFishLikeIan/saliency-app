@@ -35,10 +35,6 @@ def hello_joke():
 
     return r.text
 
-@app.before_first_request
-def initialize_database():
-    db.init_db()
-
 @app.route('/')
 def passby():
     return redirect(url_for('upload'))
@@ -70,7 +66,6 @@ def upload():
         os.remove(filepath)
 
         flash("Done")
-        print("Uploaded!")
         redirect(url_for('upload'))
 
     return render_template('upload.html')
@@ -110,4 +105,5 @@ def clear_db():
         return f"DB instance not found at {instance}"
 
 if __name__ == "__main__":
+    db.init_db()
     app.run()

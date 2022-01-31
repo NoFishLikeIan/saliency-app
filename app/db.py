@@ -34,11 +34,16 @@ def init_db():
         db.executescript(f.read().decode('utf8'))
 
 
-def add_to_saliency(report, company, saliencies):
+def add_to_saliency(report, company, saliencies, tol = 1e-4):
     db = get_db()
     cur = db.cursor()
 
-    rows = saliency_to_sql(report, company, saliencies)
+    rows = [
+        (report, company, word, score) 
+        for word, score in saliencies.items()
+        if score > tol
+    ]
+
 
     cur.executemany(
         "INSERT INTO saliency VALUES (?, ?, ?, ?)",
@@ -47,24 +52,6 @@ def add_to_saliency(report, company, saliencies):
 
     db.commit()
     close_connection()
-
-def saliency_to_sql(report, company, saliencies):
-    """
-    Maps to schema
-    (
-        report TEXT NOT NULL,
-        company TEXT NOT NULL,
-        word TEXT NOT NULL,
-        score REAL NOT NULL
-    );
-    """
-
-    rows = [
-        (report, company, word, score) for
-        word, score in saliencies.items()
-    ]    
-
-    return rows
 
 def query_db(query:str) -> pd.DataFrame:
     conn = get_db()
