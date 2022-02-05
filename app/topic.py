@@ -23,7 +23,7 @@ def format_topics_sentences(ldamodel, corpus, sentences) -> pd.DataFrame:
     
     sent_topics_df = pd.DataFrame()
 
-    for i, row_list in enumerate(ldamodel[corpus]):
+    for row_list in ldamodel[corpus]:
         row = row_list[0] if ldamodel.per_word_topics else row_list            
         row = sorted(row, key=lambda x: (x[1]), reverse=True)
 

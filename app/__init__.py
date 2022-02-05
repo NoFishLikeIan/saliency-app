@@ -1,4 +1,3 @@
-from distutils.command.upload import upload
 import os
 import requests
 
@@ -13,7 +12,7 @@ from . import db, read_pdf, saliency_metric, topic, utils
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_mapping(
-    DATABASE=os.path.join(app.instance_path, 'saliency.sqlite'),
+    DATABASE=os.path.join("DATABASE_URL"),
     BASIC_AUTH_USERNAME=os.environ.get("BASIC_AUTH_USERNAME"),
     SECRET_KEY=os.environ.get("KEY"),
     BASIC_AUTH_PASSWORD=os.environ.get("BASIC_AUTH_PASSWORD")
@@ -21,8 +20,7 @@ app.config.from_mapping(
 
 basic_auth = BasicAuth(app)
 
-# ensure the instance and tmp folder exists
-os.makedirs(app.instance_path, exist_ok=True)
+# ensure the tmp folder exists
 os.makedirs(".tmp", exist_ok=True)
 
 @app.route('/joke')
@@ -36,7 +34,7 @@ def hello_joke():
     return r.text
 
 @app.route('/')
-def passby():
+def pass_by():
     return redirect(url_for('upload'))
 
 @app.route('/upload', methods = ['GET', 'POST'])
@@ -75,7 +73,7 @@ def upload():
 @basic_auth.required
 def download():
     
-    csvraw = db.data_as_csv('SELECT rowid, * FROM saliency')
+    csvraw = db.data_as_csv('SELECT * FROM saliency')
 
     return Response(
         csvraw,
@@ -96,13 +94,9 @@ def preview():
 @app.route('/clear')
 @basic_auth.required
 def clear_db():
-    instance = app.config.get("DATABASE")
-    
-    if os.path.isfile(instance):
-        db.init_db()
-        return "Cleared db"
-    else:
-        return f"DB instance not found at {instance}"
+    db.init_db()
+
+    return 'Done!'
 
 if __name__ == "__main__":
     with app.app_context():

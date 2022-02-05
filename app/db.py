@@ -1,62 +1,39 @@
-import sqlite3
 import os
+from sqlite3 import connect
 import pandas as pd
+import psycopg2
 
-from flask import current_app, g
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_db():
 
-    db = getattr(g, '_database', None)
-
-    if db is None:
-        g._database = sqlite3.connect(
-            current_app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g._database.row_factory = sqlite3.Row
-
-        db = g._database
-
-    return db
-
-def close_connection():
+    conn = psycopg2.connect(
+        host = 'localhost',
+        database = os.environ.get('DATABASE'),
+        user = os.environ.get('DB_USERNAME'),
+        password = os.environ.get('KEY')
+    )
     
-    db = getattr(g, '_database', None)
-
-    if db is not None:
-        db.close()
-
-
-def init_db():
-    db = get_db()
-
-    with current_app.open_resource('schema.sql') as f:
-        db.executescript(f.read().decode('utf8'))
+    return conn
 
 
 def add_to_saliency(report, company, saliencies, tol = 1e-4):
-    db = get_db()
-    cur = db.cursor()
+    with get_db() as connection:
+        with connection.cursor() as cur:
+            for word, score in saliencies.items():
+                if score > tol:
+                    cur.execute(
+                        'INSERT INTO saliency VALUES (%s, %s, %s, %s)',
+                        (report, company, word, score)
+                    )
 
-    rows = [
-        (report, company, word, score) 
-        for word, score in saliencies.items()
-        if score > tol
-    ]
 
-
-    cur.executemany(
-        "INSERT INTO saliency VALUES (?, ?, ?, ?)",
-        rows
-    )
-
-    db.commit()
-    close_connection()
 
 def query_db(query:str) -> pd.DataFrame:
-    conn = get_db()
-    data = pd.read_sql_query(query, conn)
-    close_connection()
+    with get_db() as conn:
+        data = pd.read_sql_query(query, conn)
 
     return data
 
@@ -68,4 +45,17 @@ def data_as_csv(query):
     return csv
 
 
+def init_db():
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur = conn.cursor()
 
+            cur.execute('DROP TABLE IF EXISTS saliency;')
+            cur.execute("""
+            CREATE TABLE saliency (
+                report TEXT NOT NULL,
+                company TEXT NOT NULL,
+                word TEXT NOT NULL,
+                score REAL NOT NULL
+            );
+            """)
