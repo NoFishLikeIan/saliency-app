@@ -13,14 +13,6 @@ from nltk.corpus import stopwords
 # PDF
 import PyPDF2 # To decrypt file
 
-from pdfminer.converter import TextConverter
-from pdfminer.layout import LAParams
-from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfparser import PDFParser
-
-
 # Typings
 from typing import List
 
@@ -61,22 +53,16 @@ def extract_statements(text):
     return [nltk.word_tokenize(preprocess(sent)) for sent in nltk.sent_tokenize(text)]
 
 
-def pdf_to_text(pdf_file):
-    output = io.StringIO()
+def pdf_to_text(reader: PyPDF2.PdfReader):
     
-    parser = PDFParser(pdf_file)
-    manager = PDFResourceManager()
-    device = TextConverter(
-        manager, output, laparams=LAParams()
-    )
+    text = ""
 
-    interpreter = PDFPageInterpreter(manager, device)
-    document = PDFDocument(parser)
+    for page in reader.pages:
+        # TODO: Very crude. This can be improved
+        page_text = page.extract_text()
+        text += page_text
 
-    for page in PDFPage.create_pages(document):
-        interpreter.process_page(page)
-
-    return output.getvalue()
+    return text
 
 
 def pdfreader_decrypt(filename):
@@ -86,26 +72,22 @@ def pdfreader_decrypt(filename):
 
     with open(filename, "rb") as in_file:
         
-        pdfFile  = PyPDF2.PdfFileReader(in_file, strict=False)
+        reader  = PyPDF2.PdfReader(in_file, strict=False)
 
-        if pdfFile.isEncrypted:
-            try:
-                pdfFile.decrypt('')
-                print('File Decrypted (PyPDF2)')
+        if reader.is_encrypted:
 
-                return pdf_to_text(pdfFile)
-            except:
-                command = f'cp "{filename}" temp.pdf; qpdf --password="" --decrypt temp.pdf "{filename}"; rm temp.pdf'
+            command = f'cp "{filename}" temp.pdf; qpdf --password="" --decrypt temp.pdf "{filename}"; rm temp.pdf'
 
-                os.system(command)
-                print('File Decrypted (qpdf)')
+            result = os.system(command)
+            
+            if result > 0:
+                raise ValueError(f"Could not decrypt file {filename}")
+            
+            reader = PyPDF2.PdfReader(in_file, strict=False)
 
-                with open(filename, "rb") as fp:
-                    pdfFile = PyPDF2.PdfFileReader(fp, strict=False)
-                    return pdf_to_text(pdfFile)
 
-        return pdf_to_text(in_file)
-
+        text = pdf_to_text(reader)
+        return text
 
 def path_to_sentences(filepath: str) -> List[str]:
 
