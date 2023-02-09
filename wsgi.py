@@ -7,7 +7,7 @@ if __name__ == "__main__":
     with app.app_context():
         db.init_db()
 
-    if 'DYNO' is os.environ:
+    if 'DYNO' == os.environ:
         app = SSLify(app)
         
     app.run()
