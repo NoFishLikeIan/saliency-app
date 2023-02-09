@@ -1,4 +1,7 @@
-import re, io, requests, os
+import re
+import io
+import requests
+import os
 
 # NLP
 import nltk
@@ -60,7 +63,7 @@ def extract_statements(text):
 
 def pdf_to_text(pdf_file):
     output = io.StringIO()
-
+    
     parser = PDFParser(pdf_file)
     manager = PDFResourceManager()
     device = TextConverter(
@@ -82,6 +85,7 @@ def pdfreader_decrypt(filename):
     """    
 
     with open(filename, "rb") as in_file:
+        
         pdfFile  = PyPDF2.PdfFileReader(in_file, strict=False)
 
         if pdfFile.isEncrypted:

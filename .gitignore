@@ -152,8 +152,8 @@ cython_debug/
 #.idea/
 
 # Environment
+logs
 env
+test-files
 .tmp
 .vscode
-
-test-files
