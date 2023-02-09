@@ -73,29 +73,29 @@ def upload():
 
         logging.info(f"{str(datetime.now())}: Received POST request.")
 
-        if 'file' not in request.files:
-            flash('No file!')
-            return redirect(request.url)
+        files = request.files.getlist("file[]")
+    
+        logging.info(f"{str(datetime.now())}: Uploaded {len(files)} files.")
 
-        file = request.files['file']
-        logging.info(f"{str(datetime.now())}: Saving .pdf file.")
-        filepath, success = utils.save_pdf(file)
+        for (idx, file) in enumerate(files):
+            filepath, success = utils.save_pdf(file)
 
-        if not success:
-            return filepath
+            if not success:
+                return filepath
 
-        logging.info(f"{str(datetime.now())}: Fitting LDA model.")
-        sentences = read_pdf.path_to_sentences(filepath)
-        lda, corpus, words = topic.get_topics(sentences)
+            logging.info(f"{str(datetime.now())}: Processing file {idx + 1} / {len(files)}.")
+            logging.info(f"{str(datetime.now())}: Fitting LDA model.")
+            sentences = read_pdf.path_to_sentences(filepath)
+            lda, corpus, words = topic.get_topics(sentences)
 
-        logging.info(f"{str(datetime.now())}: Computing saliency model.")
-        saliencies = saliency_metric.saliency_index(lda, corpus, words) 
+            logging.info(f"{str(datetime.now())}: Computing saliency model.")
+            saliencies = saliency_metric.saliency_index(lda, corpus, words) 
 
-        report, company = file.filename.lower().replace(".pdf", "").split("-")
+            report, company = file.filename.lower().replace(".pdf", "").split("-")
 
-        db.add_to_saliency(report, company, saliencies)
+            db.add_to_saliency(report, company, saliencies)
 
-        os.remove(filepath)
+            os.remove(filepath)
 
         flash("Done")
         redirect(url_for('upload'))
