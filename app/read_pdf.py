@@ -10,6 +10,11 @@ from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer,PorterStemmer
 from nltk.corpus import stopwords
 
+nltk.download('wordnet')
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('omw-1.4')
+
 # PDF
 import PyPDF2 # To decrypt file
 
